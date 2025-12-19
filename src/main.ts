@@ -6,28 +6,23 @@ import p5 from "p5";
 // p という引数（スケッチそのもの）を受け取る関数を作る
 const sketch = (p: p5) => {
   p.setup = () => {
-    //    p.createCanvas(400, 400);
-    //    p.noFill();
-    //    console.log("hello");
-    p.createCanvas(720, 720)
-    p.noCursor()
-
-    p.colorMode(p.HSB, 300, 100, 100)
-    p.rectMode(p.CENTER)
+    p.createCanvas(800, 400)
     p.noStroke()
+    p.colorMode(p.HSB, p.width, p.height, 100)
   };
 
   p.draw = () => {
-    //    p.background(255);
-    //    p.rect(p.mouseX, p.mouseY, 40, 40);
-    //    p.ellipse(p.mouseX, p.mouseY, 40, 40);
-    //    p.requestPointerLock
-    //    p.point(50, 50)
-    //    var speed = p.dist(p.mouseX)
-    p.background(p.mouseX / 2, 100, 100)
-
-    p.fill(360, 100, 100)
-    p.rect(360, 360, p.mouseX + 1, p.mouseY + 1)
+    var stepX = p.mouseX + 2;
+    var stepY = p.mouseY + 2;
+    if (stepX < 10 || stepY < 10) {
+      return
+    }
+    for (var gridY = 0; gridY < p.height; gridY += stepY) {
+      for (var gridX = 0; gridX < p.width; gridX += stepX) {
+        p.fill(gridX, p.height - gridY, 100);
+        p.rect(gridX, gridY, stepX, stepY);
+      }
+    }
   };
 };
 
