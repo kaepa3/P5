@@ -1,85 +1,114 @@
-import { createApp } from "vue";
-import "./style.css";
-import App from "./App.vue";
-import p5 from "p5";
+import p5 from 'p5';
+import './lib/generative-design-library.js'; // サイドエフェクト・インポート
+(p5 as any).disableFriendlyErrors = true;
+// main.ts の new p5((p: any) => { ... }) の中に直接入れるか、
+// その外に定義して p を渡すようにします。
 
-/**
- * min以上max以下のランダムな整数を取得する
- */
-const getRandomInt = (min: number, max: number): number => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
+const sortColors = (p: any, colors: any[], method: any) => {
+  if (!method) return colors;
 
+  colors.sort((a, b) => {
+    // 1. 各チャンネルの値を p5インスタンス(p) を使って取得
+    if (method === 'red') return p.red(a) - p.red(b);
+    if (method === 'green') return p.green(a) - p.green(b);
+    if (method === 'blue') return p.blue(a) - p.blue(b);
+    if (method === 'alpha') return p.alpha(a) - p.alpha(b);
 
-const sketch = (p: p5) => {
-  // p という引数（スケッチそのもの）を受け取る関数を作る
-  var colorsLeft: p5.Color[] = [];
-  var colorsRight: p5.Color[] = [];
-  var tileCountX: number;
-  var tileCountY: number;
-  var interCol: p5.Color;
-  var interpolateShortest = true;
+    // 2. HUE / SATURATION / BRIGHTNESS (p5標準関数を使用)
+    if (method === 'hue') return p.hue(a) - p.hue(b);
+    if (method === 'saturation') return p.saturation(a) - p.saturation(b);
+    if (method === 'brightness') return p.brightness(a) - p.brightness(b);
 
-  function shakeColors() {
-    for (var i = 0; i < tileCountY; i++) {
-      colorsLeft[i] = p.color(getRandomInt(0, 155), getRandomInt(0, 155), 155);
-      colorsRight[i] = p.color(getRandomInt(0, 155), 55, getRandomInt(0, 55));
+    // 3. グレースケール (手動計算)
+    if (method === 'grayscale') {
+      const gA = p.red(a) * 0.222 + p.green(a) * 0.707 + p.blue(a) * 0.071;
+      const gB = p.red(b) * 0.222 + p.green(b) * 0.707 + p.blue(b) * 0.071;
+      return gA - gB;
     }
-  }
+
+    return 0;
+  });
+
+  return colors;
+};
+new p5((p: p5) => {
+  p.disableFriendlyErrors = true;
+  let img: p5.Image;
+  let colors: p5.Color[] = [];
+  let sortMode: any = null;
+
+  // 1. setImage を内部関数として定義
+  const setImage = (loadedImageFile: p5.Image) => {
+    img = loadedImageFile;
+  };
+
   p.setup = () => {
-    p.createCanvas(800, 800);
-    p.colorMode(p.HSB);
+    p.createCanvas(600, 600);
+    p.noCursor();
     p.noStroke();
-    shakeColors();
+    p.loadImage('pic.png', setImage, (err: any) => {
+      console.error('Image Load Failed!', err); // 失敗した時のログ
+    });
   };
 
   p.draw = () => {
-    // カラーモードを元コードに合わせる
-    p.colorMode(p.HSB, 360, p.width, p.height);
-    p.background(360, 0, p.height);
+    if (!img || !img.pixels) return;
 
-    tileCountX = p.map(p.mouseX, 0, p.width, 2, 100);
-    tileCountY = p.map(p.mouseY, 0, p.height, 2, 10);
-    const tileWidth = p.width / tileCountX;
-    const tileHeight = p.height / tileCountY;
-    const colors = [];
+    img.loadPixels();
 
-    // 2Dモードで色を分けるには、ループ内で三角形を一つずつ描く
-    for (let gridY = 0; gridY < tileCountY; gridY++) {
-      const col1 = colorsLeft[gridY];
-      const col2 = colorsRight[gridY];
-      for (let gridX = 0; gridX < tileCountX; gridX++) {
-        const amount = p.map(gridX, 0, tileCountX - 1, 0, 1);
-        if (interpolateShortest) {
-          p.colorMode(p.RGB)
-          if (col1 && col2) {
-            interCol = p.lerpColor(col1, col2, amount);
-          }
-          p.colorMode(p.HSB);
-        } else {
-          if (col1 && col2) {
-            interCol = p.lerpColor(col1, col2, amount);
-          }
-        }
-        p.fill(interCol);
-        const posX = tileWidth * gridX;
-        const posY = tileHeight * gridY;
-        p.rect(posX, posY, tileWidth, tileHeight);
-        colors.push(interCol)
+    const tileCount = p.floor(p.width / p.max(p.mouseX, 5));
+    const rectSize = p.width / tileCount;
+
+    colors = [];
+
+    // ピクセル抽出
+    for (let gridY = 0; gridY < tileCount; gridY++) {
+      for (let gridX = 0; gridX < tileCount; gridX++) {
+        const px = p.int(gridX * rectSize);
+        const py = p.int(gridY * rectSize);
+        const i = (py * img.width + px) * 4;
+        const c = p.color(
+          img.pixels[i],
+          img.pixels[i + 1],
+          img.pixels[i + 2],
+          img.pixels[i + 3]
+        );
+        colors.push(c);
+      }
+    }
+
+    // 3. ライブラリ呼び出し (前回修正した通り、p を渡す必要があるかもしれません)
+    // ライブラリの仕様に合わせて gd.sortColors(colors, sortMode) かもしれません
+    sortColors(p, colors, sortMode);
+
+    // 描画
+    let i = 0;
+    for (let gridY = 0; gridY < tileCount; gridY++) {
+      for (let gridX = 0; gridX < tileCount; gridX++) {
+        p.fill(colors[i]);
+        p.rect(gridX * rectSize, gridY * rectSize, rectSize, rectSize);
+        i++;
       }
     }
   };
-  p.keyPressed = () => {
-    if (p.key == '1') interpolateShortest = true;
-    if (p.key == '2') interpolateShortest = false;
+
+  p.keyReleased = () => {
+    // 4. キー判定
+    if (p.key == 'c' || p.key == 'C') {
+      // writeFile や gd.timestamp がグローバルにある前提
+      (window as any).writeFile([gd.ase.encode(colors)], gd.timestamp(), 'ase');
+    }
+    if (p.key == 's' || p.key == 'S') p.saveCanvas(gd.timestamp(), 'png');
+
+    if (p.key == '1') p.loadImage('data/pic1.jpg', setImage);
+    if (p.key == '2') p.loadImage('data/pic2.jpg', setImage);
+    if (p.key == '3') p.loadImage('data/pic3.jpg', setImage);
+    if (p.key == '4') p.loadImage('data/pic4.jpg', setImage);
+    if (p.key == 'a') sortMode = null;
+    if (p.key == 'b') sortMode = gd.HUE;
+    if (p.key == '7') sortMode = gd.SATURATION;
+    if (p.key == '8') sortMode = gd.BRIGHTNESS;
+    if (p.key == '9') sortMode = gd.GRAYSCALE;
+    console.log("press:" + p.key + ":" + sortMode)
   };
-  p.mouseReleased = () => {
-    shakeColors();
-  }
-};
-
-// 実行
-const targetElement = document.getElementById("app") as HTMLElement;
-new p5(sketch, targetElement);
-
-createApp(App).mount("#app");
+});
