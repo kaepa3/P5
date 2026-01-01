@@ -4,38 +4,10 @@ import './lib/generative-design-library.js'; // サイドエフェクト・イ�
 // main.ts の new p5((p: any) => { ... }) の中に直接入れるか、
 // その外に定義して p を渡すようにします。
 
-const sortColors = (p: any, colors: any[], method: any) => {
-  if (!method) return colors;
-
-  colors.sort((a, b) => {
-    // 1. 各チャンネルの値を p5インスタンス(p) を使って取得
-    if (method === 'red') return p.red(a) - p.red(b);
-    if (method === 'green') return p.green(a) - p.green(b);
-    if (method === 'blue') return p.blue(a) - p.blue(b);
-    if (method === 'alpha') return p.alpha(a) - p.alpha(b);
-
-    // 2. HUE / SATURATION / BRIGHTNESS (p5標準関数を使用)
-    if (method === 'hue') return p.hue(a) - p.hue(b);
-    if (method === 'saturation') return p.saturation(a) - p.saturation(b);
-    if (method === 'brightness') return p.brightness(a) - p.brightness(b);
-
-    // 3. グレースケール (手動計算)
-    if (method === 'grayscale') {
-      const gA = p.red(a) * 0.222 + p.green(a) * 0.707 + p.blue(a) * 0.071;
-      const gB = p.red(b) * 0.222 + p.green(b) * 0.707 + p.blue(b) * 0.071;
-      return gA - gB;
-    }
-
-    return 0;
-  });
-
-  return colors;
-};
 new p5((p: p5) => {
-  p.disableFriendlyErrors = true;
-  let img: p5.Image;
-  let colors: p5.Color[] = [];
-  let sortMode: any = null;
+  let hueValues: p5.Color[] = [];
+  let saturationValues: p5.Color[] = [];
+  let brightnessValues: p5.Color[] = [];
 
   // 1. setImage を内部関数として定義
   const setImage = (loadedImageFile: p5.Image) => {
