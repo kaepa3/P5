@@ -8,52 +8,93 @@ new p5((p: p5) => {
   let hueValues: number[] = [];
   let saturationValues: number[] = [];
   let brightnessValues: number[] = [];
-
-  var tileCountX = 50;
-  var tileCountY = 10;
+  let actRandomSeed = 0;
+  let colorCount = 20;
 
   p.setup = () => {
     p.createCanvas(p.windowWidth, p.windowHeight);
     p.colorMode(p.HSB, 360, 100, 100, 100);
     p.noStroke();
-
-    for (let i = 0; i < tileCountX; i++) {
-      hueValues[i] = p.random(360);
-      saturationValues[i] = p.random(100);
-      brightnessValues[i] = p.random(100);
-    }
   };
 
   p.draw = () => {
-    p.background(0, 0, 100);
+    p.noLoop();
+    p.randomSeed(actRandomSeed);
 
-    var mX = p.constrain(p.mouseX, 0, p.width);
-    var mY = p.constrain(p.mouseY, 0, p.height);
+    for (let i = 0; i < colorCount; i++) {
+      if (i % 2 == 0) {
 
-    var counter = 0;
-    var currentTileCountX = p.map(mX, 0, p.width, 1, tileCountX);
-    var currentTileCountY = p.map(mY, 0, p.height, 1, tileCountY);
-    var tileWidth = p.width / currentTileCountX;
-    var tileHeight = p.height / currentTileCountY;
-    for (let gridY = 0; gridY < tileCountY; gridY++) {
-      for (let gridX = 0; gridX < tileCountX; gridX++) {
-        var posX = tileWidth * gridX;
-        var posY = tileHeight * gridY;
+        hueValues[i] = p.random(130, 220);
+        saturationValues[i] = 100;
+        brightnessValues[i] = Math.floor(p.random(15, 100));
+      } else {
 
-        var index = Math.floor(counter % currentTileCountX);
-
-        var h = hueValues[index];
-        var s = saturationValues[index];
-        var b = brightnessValues[index];
-        if (h && s && b) {
-          p.fill(h, s, b);
-        } else {
-          console.log("over flow:" + index)
-        }
-        p.rect(posX, posY, tileWidth, tileHeight);
-        counter++;
+        hueValues[i] = 195;
+        saturationValues[i] = Math.floor(p.random(20, 100));
+        brightnessValues[i] = 100;
       }
     }
+
+    var counter = 0;
+    var rowCount = Math.floor(p.random(5, 30));
+    var rowHeight = p.height / rowCount;
+
+    for (let i = rowCount; i >= 0; i--) {
+      var partCount = i + 1;
+      var parts = [];
+      for (let ii = 0; ii < partCount; ii++) {
+        if (p.random() < 0.075) {
+          var fragments = p.random(2, 20);
+          partCount = partCount + fragments;
+          for (let iii = 0; iii < fragments; iii++) {
+            parts.push(p.random(2));
+          }
+        } else {
+          parts.push(p.random(2, 20));
+        }
+      }
+
+      var sumPartsTotal = 0;
+      for (let ii = 0; ii < partCount; ii++) {
+        var v = parts[ii];
+        if (v) {
+          sumPartsTotal += v;
+        }
+      }
+
+      var sumPartsNow = 0;
+      for (let ii = 0; ii < parts.length; ii++) {
+        var pV = parts[ii]
+        if (pV) {
+          sumPartsNow += pV;
+          var x = p.map(sumPartsNow, 0, sumPartsTotal, 0, p.width);
+          var y = rowHeight * i;
+          var w = -p.map(pV, 0, sumPartsTotal, 0, p.width);
+          var h = rowHeight;
+
+          var index = Math.floor(counter % colorCount);
+          var hV = hueValues[index];
+          var sV = saturationValues[index];
+          var bV = brightnessValues[index];
+          if (hV && sV && bV && x) {
+            var col = p.color(hV, sV, bV);
+            p.fill(col);
+            p.rect(x, y, w, h);
+          } else {
+            console.log("error1:" + x + ":" + y + ":" + w + ":" + h + ":" + hV + ":" + sV + ":" + bV);
+          }
+        } else {
+          console.log("error2");
+        }
+        counter++;
+
+      }
+    }
+  };
+
+  p.mouseReleased = () => {
+    actRandomSeed = p.random(100000);
+    p.loop();
   };
 
   p.keyReleased = () => {
@@ -70,98 +111,6 @@ new p5((p: p5) => {
         }
       }
       writeFile([gd.ase.encode(colors)], gd.timestamp(), 'ase');
-    }
-
-    if (p.key == '1') {
-      for (var i = 0; i < tileCountX; i++) {
-        hueValues[i] = p.random(360);
-        saturationValues[i] = p.random(100);
-        brightnessValues[i] = p.random(100);
-      }
-    }
-
-    if (p.key == '2') {
-      for (var i = 0; i < tileCountX; i++) {
-        hueValues[i] = p.random(360);
-        saturationValues[i] = p.random(100);
-        brightnessValues[i] = 100;
-      }
-    }
-
-    if (p.key == '3') {
-      for (var i = 0; i < tileCountX; i++) {
-        hueValues[i] = p.random(360);
-        saturationValues[i] = 100;
-        brightnessValues[i] = p.random(100);
-      }
-    }
-
-    if (p.key == '4') {
-      for (var i = 0; i < tileCountX; i++) {
-        hueValues[i] = 0;
-        saturationValues[i] = 0;
-        brightnessValues[i] = p.random(100);
-      }
-    }
-
-    if (p.key == '5') {
-      for (var i = 0; i < tileCountX; i++) {
-        hueValues[i] = 195;
-        saturationValues[i] = 100;
-        brightnessValues[i] = p.random(100);
-      }
-    }
-
-    if (p.key == '6') {
-      for (var i = 0; i < tileCountX; i++) {
-        hueValues[i] = 195;
-        saturationValues[i] = p.random(100);
-        brightnessValues[i] = 100;
-      }
-    }
-
-    if (p.key == '7') {
-      for (var i = 0; i < tileCountX; i++) {
-        hueValues[i] = p.random(180);
-        saturationValues[i] = p.random(80, 100);
-        brightnessValues[i] = p.random(50, 90);
-      }
-    }
-
-    if (p.key == '8') {
-      for (var i = 0; i < tileCountX; i++) {
-        hueValues[i] = p.random(180, 360);
-        saturationValues[i] = p.random(80, 100);
-        brightnessValues[i] = p.random(50, 90);
-      }
-    }
-
-    if (p.key == '9') {
-      for (var i = 0; i < tileCountX; i++) {
-        if (i % 2 == 0) {
-          hueValues[i] = p.random(360);
-          saturationValues[i] = 100;
-          brightnessValues[i] = p.random(100);
-        } else {
-          hueValues[i] = 195;
-          saturationValues[i] = p.random(100);
-          brightnessValues[i] = 100;
-        }
-      }
-    }
-
-    if (p.key == '0') {
-      for (var i = 0; i < tileCountX; i++) {
-        if (i % 2 == 0) {
-          hueValues[i] = 140;
-          saturationValues[i] = p.random(30, 100);
-          brightnessValues[i] = p.random(40, 100);
-        } else {
-          hueValues[i] = 210;
-          saturationValues[i] = p.random(40, 100);
-          brightnessValues[i] = p.random(50, 100);
-        }
-      }
     }
   };
 });
