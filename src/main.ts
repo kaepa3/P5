@@ -5,34 +5,51 @@ import './lib/generative-design-library.js'; // サイドエフェクト・イ�
 // その外に定義して p を渡すようにします。
 
 new p5((p: p5) => {
+  var tileCount = 20;
+  var actRandomSeed = 0;
+
+  var actStrokeCap;
 
   p.setup = () => {
-    p.createCanvas(720, 720);
-    p.noFill()
-    p.background(255);
-    p.strokeWeight(2);
-    p.stroke(0, 25);
+    p.createCanvas(600, 600);
+    actStrokeCap = p.ROUND;
   };
 
   p.draw = () => {
-    if (p.mouseIsPressed && p.mouseButton.left) {
-      p.push();
-      p.translate(p.width / 2, p.height / 2);
-      var circleResolution = p.map(p.mouseY + 100, 0, p.height, 2, 10);
-      var radius = p.mouseX - p.width / 2;
-      var angle = p.TAU / circleResolution;
-      p.beginShape();
-      for (let i = 0; i < circleResolution; i++) {
-        const x = p.cos(angle * i) * radius;
-        const y = p.sin(angle * i) * radius;
-        p.vertex(x, y);
+    p.clear();
 
+    p.strokeCap(actStrokeCap);
+    p.randomSeed(actRandomSeed);
+    for (let gridX = 0; gridX < tileCount; gridX++) {
+      for (let gridY = 0; gridY < tileCount; gridY++) {
+        const posX = p.width / tileCount * gridX;
+        const posY = p.height / tileCount * gridY;
+
+        var toggle = p.floor(p.random(0, 2));
+        if (toggle == 0) {
+          p.strokeWeight(p.mouseX / 20);
+          p.line(posX, posY, posX + p.width / tileCount, posY + p.height / tileCount);
+        }
+        else if (toggle == 1) {
+          p.strokeWeight(p.mouseY / 20);
+          p.line(posX, posY + p.width / tileCount, posX + p.height / tileCount, posY);
+        }
+        else {
+          console.log("naze:" + toggle);
+        }
       }
-      p.endShape();
-      p.pop();
     }
   };
+  p.mousePressed = () => {
+    actRandomSeed = p.random(100000);
+  };
+
+
   p.keyReleased = () => {
-    if (p.key == p.DELETE) p.background(255);
+    if (p.key == 's' || p.key == 'S') p.saveCanvas(gd.timestamp(), 'png');
+
+    if (p.key == '1') actStrokeCap = p.ROUND;
+    if (p.key == '2') actStrokeCap = p.SQUARE;
+    if (p.key == '3') actStrokeCap = p.PROJECT;
   }
 });
