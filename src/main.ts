@@ -18,26 +18,20 @@ new p5((p: p5) => {
 
   var sizeMode = 0;
 
-  async function getImage(path: string): Promise<p5.Image> {
-    const response = await fetch(path);
-    const text = await response.text();
-    console.log("First 5 chars:", text.substring(0, 5));
-    // 1. 文字列からBlobを作成（ここで image/svg+xml を強制）
-    const blob = new Blob([text], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-
+  async function getImage(path: string): Promise<p5.Element> {
     return new Promise((resolve, reject) => {
-      p.loadImage(
-        url,
-        (img) => {
-          URL.revokeObjectURL(url);
+      const img = p.createImg(
+        path,
+        "svg-asset",
+        "", // crossOrigin
+        () => {
+          img.hide(); // ページ上に画像が並ぶのを防ぐ
           resolve(img);
-        },
-        (err) => {
-          URL.revokeObjectURL(url);
-          reject(err);
         }
       );
+
+      // 万が一のためのタイムアウト（5秒）
+      setTimeout(() => reject(new Error(`Timeout: ${path}`)), 5000);
     });
   }
 
@@ -58,7 +52,7 @@ new p5((p: p5) => {
         try {
           const img = await getImage(element);
           console.log("yattayo")
-          shapes.push(img);
+          shapes.push(img as unknown as p5.Image);
         } catch (err) {
           console.error(element + ":" + err);
         }
