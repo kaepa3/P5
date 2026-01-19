@@ -5,160 +5,45 @@ import './lib/generative-design-library.js'; // サイドエフェクト・イ�
 new p5((p: p5) => {
 
   var tileCount = 10;
-  var shapes: p5.Image[] = [];
-  var currentShape: p5.Image;
-  var tileWidth: number;
-  var tileHeight: number;
-  var maxDist: number;
-  var shapeAngle = 0;
-  var shapeSize = 20;
-  var newShapeSize = shapeSize;
-  var isLoading = true;
+  var actRandomSeed: number = 0;
 
-
-  var sizeMode = 0;
-
-  async function getImage(path: string): Promise<p5.Element> {
-    return new Promise((resolve, reject) => {
-      const img = p.createImg(
-        path,
-        "svg-asset",
-        "", // crossOrigin
-        () => {
-          img.hide(); // ページ上に画像が並ぶのを防ぐ
-          resolve(img);
-        }
-      );
-
-      // 万が一のためのタイムアウト（5秒）
-      setTimeout(() => reject(new Error(`Timeout: ${path}`)), 5000);
-    });
-  }
+  var circleAlpha = 130;
+  var circleColor: p5.Color;
 
   p.setup = async () => {
-    console.log("start");
-    const paths: string[] = [
-      '/data/module_1.svg',
-      '/data/module_2.svg',
-      '/data/module_3.svg',
-      '/data/module_4.svg',
-      '/data/module_5.svg',
-      '/data/module_6.svg',
-      '/data/module_7.svg',
-    ];
-    for (let index = 0; index < paths.length; index++) {
-      const element = paths[index];
-      if (element) {
-        try {
-          const img = await getImage(element);
-          console.log("yattayo")
-          shapes.push(img as unknown as p5.Image);
-        } catch (err) {
-          console.error(element + ":" + err);
-        }
-      }
-    }
-    console.log("end");
     p.createCanvas(600, 600);
-    p.imageMode(p.CENTER);
-    var img = shapes[0];
-    if (img) {
-      currentShape = img;
-    }
-    tileWidth = p.width / tileCount;
-    tileHeight = p.height / tileCount;
-    maxDist = p.sqrt(p.pow(p.width, 2) + p.pow(p.height, 2))
-    isLoading = false;
-
+    p.noFill();
+    circleColor = p.color(0, 0, 0, circleAlpha);
   };
 
 
   p.draw = () => {
-    if (shapes.length === 0) return;
-    if (isLoading) return;
+    p.translate(p.width / tileCount / 2, p.height / tileCount / 2);
+    p.background(255);
+    p.randomSeed(actRandomSeed);
 
-    p.clear();
+    p.stroke(circleColor);
+    p.strokeWeight(p.mouseY / 60);
+
     for (let gridY = 0; gridY < tileCount; gridY++) {
       for (let gridX = 0; gridX < tileCount; gridX++) {
-        var posX = tileWidth * gridX + tileWidth / 2;
-        var posY = tileHeight * gridY + tileWidth / 2;
-        var angle = p.atan2(p.mouseY - posY, p.mouseX - posX) + (shapeAngle * (p.PI / 180));
-        if (sizeMode == 0) newShapeSize = shapeSize;
-        if (sizeMode == 1) newShapeSize = shapeSize * 1.5 - p.map(p.dist(p.mouseX, p.mouseY, posX, posY), 0, 500, 5, shapeSize);
-        if (sizeMode == 2) newShapeSize = p.map(p.dist(p.mouseX, p.mouseY, posX, posY), 0, 500, 5, shapeSize);
+        var posX = p.width / tileCount * gridX;
+        var posY = p.height / tileCount * gridY;
 
-        p.push();
-        p.translate(posX, posY);
-        p.rotate(angle);
-        p.noStroke();
-        p.image(currentShape, 0, 0, newShapeSize, newShapeSize);
-        p.pop();
+        var shiftX = p.random(-p.mouseX, p.mouseX) / 20;
+        var shiftY = p.random(-p.mouseX, p.mouseX) / 20;
+
+        p.ellipse(posX + shiftX, posY + shiftY, p.mouseY / 15, p.mouseY / 15);
       }
     }
-
   };
 
   p.mousePressed = () => {
+    actRandomSeed = p.random(100000);
   };
 
 
   p.keyReleased = () => {
     if (p.key == 's') p.saveCanvas("hoge", 'png')
-    if (p.key == 'd') sizeMode = (sizeMode + 1) % 3;
-    if (p.key == 'g') {
-      tileCount += 5;
-      if (tileCount > 20) {
-        tileCount = 10;
-      }
-      tileWidth = p.width / tileCount;
-      tileHeight = p.height / tileCount;
-    }
-    if (p.key == '1') {
-      var img = shapes[0];
-      if (img) {
-        currentShape = img;
-      }
-    }
-    if (p.key == '2') {
-      var img = shapes[1];
-      if (img) {
-        currentShape = img;
-      }
-    }
-    if (p.key == '3') {
-      var img = shapes[2];
-      if (img) {
-        currentShape = img;
-      }
-    }
-    if (p.key == '4') {
-      var img = shapes[3];
-      if (img) {
-        currentShape = img;
-      }
-    }
-    if (p.key == '5') {
-      var img = shapes[4];
-      if (img) {
-        currentShape = img;
-      }
-    }
-    if (p.key == '6') {
-      var img = shapes[5];
-      if (img) {
-        currentShape = img;
-      }
-    }
-    if (p.key == '7') {
-      var img = shapes[6];
-      if (img) {
-        currentShape = img;
-      }
-    }
-
-    if (p.key == p.UP_ARROW) shapeSize += 5;
-    if (p.key == p.DOWN_ARROW) shapeSize -= 5;
-    if (p.key == p.LEFT_ARROW) shapeAngle += 5;
-    if (p.key == p.RIGHT_ARROW) shapeAngle -= 5;
   }
 });
