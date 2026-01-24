@@ -13,14 +13,14 @@ new p5((p: p5) => {
   p.setup = () => {
     p.createCanvas(p.windowWidth, p.windowHeight);
     p.rectMode(p.CENTER);
-    p.noFill();
   };
 
   p.draw = () => {
-    p.background(255);
+    p.clear();
+    p.noFill();
 
-    count = p.mouseX / 20 + 5;
-    var para = p.min(p.height, p.mouseY) / p.height - 0.5;
+    count = p.mouseX / 10 + 10;
+    var para = p.mouseY / p.height;
 
     var tileWidth = p.width / tileCountX;
     var tileHeight = p.height / tileCountY;
@@ -35,28 +35,44 @@ new p5((p: p5) => {
 
         switch (drawMode) {
           case 1:
-            p.translate(-tileWidth / 2, -tileHeight / 2);
+            p.stroke(0);
             for (let i = 0; i < count; i++) {
-              p.line(0, (para + 0.5) * tileHeight, tileWidth, i * tileHeight / count);
-              p.line(0, i * tileHeight / count, tileWidth, i * tileHeight - (para + 0.5) * tileHeight);
+              p.rect(0, 0, tileWidth, tileHeight);
+              p.scale(1 - 3 / count);
+              p.rotate(para * 0.1);
             }
-
             break;
           case 2:
+            p.noStroke();
             for (let i = 0; i < count; i++) {
-              p.line(para * tileWidth, para * tileHeight, tileWidth / 2, (i / count - 0.5) * tileHeight);
-              p.line(para * tileWidth, para * tileHeight, -tileWidth / 2, (i / count - 0.5) * tileHeight);
-              p.line(para * tileWidth, para * tileHeight, (i / count - 0.5) * tileWidth, tileHeight / 2);
-              p.line(para * tileWidth, para * tileHeight, (i / count - 0.5) * tileWidth, -tileHeight / 2);
+              var gradient = p.lerpColor(p.color(0, 0), p.color(166, 141, 5), i / count);
+              gradient.setAlpha(i / count * 200);
+              p.fill(gradient);
+              p.rotate(p.QUARTER_PI);
+              p.rect(0, 0, tileWidth, tileHeight);
+              p.scale(1 - 3 / count);
+              p.rotate(para * 1.5);
             }
-
             break;
           case 3:
+            p.noStroke();
             for (let i = 0; i < count; i++) {
-              p.line(0, para * tileHeight, tileWidth / 2, (i / count - 0.5) * tileHeight);
-              p.line(0, para * tileHeight, -tileWidth / 2, (i / count - 0.5) * tileHeight);
-              p.line(0, para * tileHeight, (i / count - 0.5) * tileWidth, tileHeight / 2);
-              p.line(0, para * tileHeight, (i / count - 0.5) * tileWidth, -tileHeight / 2);
+
+              var gradient = p.lerpColor(p.color(0, 0), p.color(166, 141, 5), i / count);
+              gradient.setAlpha(170);
+              p.fill(gradient);
+              p.push();
+              p.translate(4 * i, 0);
+              p.ellipse(0, 0, tileWidth / 4, tileHeight / 4);
+              p.pop();
+
+              p.push();
+              p.translate(-4 * i, 0);
+              p.ellipse(0, 0, tileWidth / 4, tileHeight / 4);
+              p.pop();
+
+              p.scale(1 - 1.5 / count);
+              p.rotate(para * 1.5);
             }
             break;
         }
@@ -74,5 +90,12 @@ new p5((p: p5) => {
 
   p.keyReleased = () => {
     if (p.key == 's') p.saveCanvas("hoge", 'png')
+    if (p.key == '1') drawMode = 1;
+    if (p.key == '2') drawMode = 2;
+    if (p.key == '3') drawMode = 3;
+    if (p.key == p.DOWN_ARROW) tileCountY = p.max(tileCountY - 1, 1);
+    if (p.key == p.UP_ARROW) tileCountY += 1;
+    if (p.key == p.LEFT_ARROW) tileCountX = p.max(tileCountX - 1, 1);
+    if (p.key == p.RIGHT_ARROW) tileCountX += 1;
   }
 });
