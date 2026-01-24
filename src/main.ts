@@ -4,81 +4,61 @@ import './lib/generative-design-library.js'; // サイドエフェクト・イ�
 
 
 new p5((p: p5) => {
-  var count = 10;
-  var lineWeight = 0;
-  var strokeColor = 0;
-  var backgroundColor = 0;
+  var count = 0;
+  var tileCountX = 6;
+  var tileCountY = 6;
 
   var drawMode = 1;
 
   p.setup = () => {
-    p.createCanvas(800, 800);
+    p.createCanvas(p.windowWidth, p.windowHeight);
+    p.rectMode(p.CENTER);
+    p.noFill();
   };
 
   p.draw = () => {
-    p.background(backgroundColor);
+    p.background(255);
 
-    var tileCountX = p.mouseX / 30 + 1;
-    var tileCountY = p.mouseY / 30 + 1;
+    count = p.mouseX / 20 + 5;
+    var para = p.min(p.height, p.mouseY) / p.height - 0.5;
+
     var tileWidth = p.width / tileCountX;
     var tileHeight = p.height / tileCountY;
 
     for (let gridY = 0; gridY < tileCountY; gridY++) {
       for (let gridX = 0; gridX < tileCountX; gridX++) {
-        var posX = tileWidth * gridX;
-        var posY = tileHeight * gridY;
+        var posX = tileWidth * gridX + tileWidth / 2;
+        var posY = tileHeight * gridY + tileHeight / 2;
 
-        var x1 = tileWidth / 2;
-        var y1 = tileHeight / 2;
-        var x2 = 0;
-        var y2 = 0;
         p.push();
         p.translate(posX, posY);
-        for (let side = 0; side < 4; side++) {
-          for (let i = 0; i < count; i++) {
-            switch (side) {
-              case 0:
-                x2 += tileWidth / count;
-                y2 = 0;
-                break;
-              case 1:
-                x2 = tileWidth;
-                y2 += tileHeight / count;
-                break;
-              case 2:
-                x2 -= tileWidth / count;
-                y2 = tileHeight;
-                break;
-              case 3:
-                x2 = 0;
-                y2 -= tileHeight / count;
-                break;
+
+        switch (drawMode) {
+          case 1:
+            p.translate(-tileWidth / 2, -tileHeight / 2);
+            for (let i = 0; i < count; i++) {
+              p.line(0, (para + 0.5) * tileHeight, tileWidth, i * tileHeight / count);
+              p.line(0, i * tileHeight / count, tileWidth, i * tileHeight - (para + 0.5) * tileHeight);
             }
-            if (i < count / 2) {
-              lineWeight += 1;
-              strokeColor += 60;
-            } else {
-              lineWeight -= 1;
-              strokeColor -= 60;
+
+            break;
+          case 2:
+            for (let i = 0; i < count; i++) {
+              p.line(para * tileWidth, para * tileHeight, tileWidth / 2, (i / count - 0.5) * tileHeight);
+              p.line(para * tileWidth, para * tileHeight, -tileWidth / 2, (i / count - 0.5) * tileHeight);
+              p.line(para * tileWidth, para * tileHeight, (i / count - 0.5) * tileWidth, tileHeight / 2);
+              p.line(para * tileWidth, para * tileHeight, (i / count - 0.5) * tileWidth, -tileHeight / 2);
             }
-            switch (drawMode) {
-              case 1:
-                backgroundColor = 255;
-                p.stroke(0);
-                break;
-              case 2:
-                backgroundColor = 255;
-                p.stroke(0);
-                p.strokeWeight(lineWeight);
-                break;
-              case 3:
-                backgroundColor = 0;
-                p.stroke(strokeColor);
-                p.strokeWeight(p.mouseX / 100);
-                break;
+
+            break;
+          case 3:
+            for (let i = 0; i < count; i++) {
+              p.line(0, para * tileHeight, tileWidth / 2, (i / count - 0.5) * tileHeight);
+              p.line(0, para * tileHeight, -tileWidth / 2, (i / count - 0.5) * tileHeight);
+              p.line(0, para * tileHeight, (i / count - 0.5) * tileWidth, tileHeight / 2);
+              p.line(0, para * tileHeight, (i / count - 0.5) * tileWidth, -tileHeight / 2);
             }
-            p.line(x1, y1, x2, y2);
-          }
+            break;
         }
         p.pop();
       }
