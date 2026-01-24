@@ -4,65 +4,83 @@ import './lib/generative-design-library.js'; // サイドエフェクト・イ�
 
 
 new p5((p: p5) => {
-  var tileCountX = 10;
-  var tileCountY = 10;
-  var tileWidth = 0;
-  var tileHeight = 0;
+  var count = 10;
+  var lineWeight = 0;
+  var strokeColor = 0;
+  var backgroundColor = 0;
 
-
-  var circleCount = 0;
-  var endSize = 0;
-  var endOffset = 0;
-
-  var actRandomSeed = 0;
+  var drawMode = 1;
 
   p.setup = () => {
     p.createCanvas(800, 800);
-    tileWidth = p.width / tileCountX;
-    tileHeight = p.height / tileCountY;
-
-    p.noFill();
-    p.stroke(0, 128);
   };
 
   p.draw = () => {
-    p.background(255);
-    p.randomSeed(actRandomSeed);
+    p.background(backgroundColor);
 
-    p.translate(tileWidth / 2, tileHeight / 2);
-
-    circleCount = p.mouseX / 30 + 1;
-    endSize = p.map(p.mouseX, 0, p.max(p.width, p.mouseX), tileWidth / 2, 0);
-    endOffset = p.map(p.mouseY, 0, p.max(p.height, p.mouseY), 0, (tileWidth - endSize) / 2);
+    var tileCountX = p.mouseX / 30 + 1;
+    var tileCountY = p.mouseY / 30 + 1;
+    var tileWidth = p.width / tileCountX;
+    var tileHeight = p.height / tileCountY;
 
     for (let gridY = 0; gridY < tileCountY; gridY++) {
       for (let gridX = 0; gridX < tileCountX; gridX++) {
-        p.push();
-        p.translate(tileWidth * gridX, tileHeight * gridY);
-        p.scale(1, tileHeight / tileWidth);
+        var posX = tileWidth * gridX;
+        var posY = tileHeight * gridY;
 
-        var toggle = Math.floor(p.random(0, 4));
-        switch (toggle) {
-          case 0:
-            p.rotate(-p.HALF_PI);
-            break;
-          case 1:
-            p.rotate(0);
-            break;
-          case 2:
-            p.rotate(p.HALF_PI);
-            break;
-          case 3:
-            p.rotate(p.PI);
-            break;
-        }
-        for (let i = 0; i < circleCount; i++) {
-          const diameter = p.map(i, 0, circleCount, tileWidth, endSize);
-          var offset = p.map(i, 0, circleCount, 0, endOffset);
-          p.ellipse(offset, 0, diameter, diameter);
+        var x1 = tileWidth / 2;
+        var y1 = tileHeight / 2;
+        var x2 = 0;
+        var y2 = 0;
+        p.push();
+        p.translate(posX, posY);
+        for (let side = 0; side < 4; side++) {
+          for (let i = 0; i < count; i++) {
+            switch (side) {
+              case 0:
+                x2 += tileWidth / count;
+                y2 = 0;
+                break;
+              case 1:
+                x2 = tileWidth;
+                y2 += tileHeight / count;
+                break;
+              case 2:
+                x2 -= tileWidth / count;
+                y2 = tileHeight;
+                break;
+              case 3:
+                x2 = 0;
+                y2 -= tileHeight / count;
+                break;
+            }
+            if (i < count / 2) {
+              lineWeight += 1;
+              strokeColor += 60;
+            } else {
+              lineWeight -= 1;
+              strokeColor -= 60;
+            }
+            switch (drawMode) {
+              case 1:
+                backgroundColor = 255;
+                p.stroke(0);
+                break;
+              case 2:
+                backgroundColor = 255;
+                p.stroke(0);
+                p.strokeWeight(lineWeight);
+                break;
+              case 3:
+                backgroundColor = 0;
+                p.stroke(strokeColor);
+                p.strokeWeight(p.mouseX / 100);
+                break;
+            }
+            p.line(x1, y1, x2, y2);
+          }
         }
         p.pop();
-
       }
     }
   };
@@ -71,7 +89,6 @@ new p5((p: p5) => {
   };
 
   p.mousePressed = () => {
-    actRandomSeed = p.random(100000);
   };
 
 
